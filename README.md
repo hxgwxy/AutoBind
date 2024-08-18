@@ -1,1 +1,1 @@
-# AutoBind
+简单的Unity组件自动绑定工具
