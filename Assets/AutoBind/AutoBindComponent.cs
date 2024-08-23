@@ -342,11 +342,11 @@ public class AutoBindComponentInspector : UnityEditor.Editor
             var savePath = $"{dir}/{Path.GetFileNameWithoutExtension(scriptPath)}.Auto.cs";
 
             var mainScriptText = File.ReadAllText(scriptPath);
-            var match1 = Regex.Match(mainScriptText, $@"class[^.]+{type.Name}");
-            var match2 = Regex.Match(mainScriptText, $@"partial[^.]+class[^.]+{type.Name}");
+            var match1 = Regex.Match(mainScriptText, $@"class[^.]+{type.Name}[^.]*:");
+            var match2 = Regex.Match(mainScriptText, $@"partial[^.]+class[^.]+{type.Name}[^.]*:");
             if (match1.Success && !match2.Success)
             {
-                mainScriptText = mainScriptText.Replace(match1.Value, $"partial class {type.Name}");
+                mainScriptText = mainScriptText.Replace(match1.Value, $"partial class {type.Name} :");
                 File.WriteAllText(scriptPath, mainScriptText);
             }
 
