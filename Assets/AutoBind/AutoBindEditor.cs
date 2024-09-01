@@ -12,36 +12,40 @@ public class AutoBindEditor
     [InitializeOnLoadMethod]
     private static void OnLoad()
     {
-        EditorApplication.update += OnUpdate;
-    }
-
-    private static void OnUpdate()
-    {
-        IsCanModify = true;
     }
 
     [MenuItem("GameObject/**添加绑定组件**", false, 0)]
     private static void AutoBind(MenuCommand menuCommand)
     {
+        var dirty = false;
         foreach (var go in Selection.gameObjects)
         {
-            go.GetOrAddComponent<AutoBindCollection>();
+            if (!go.name.StartsWith("@"))
+            {
+                go.name = $"@{go.name}";
+                dirty = true;
+            }
         }
 
-        EditorUtility.SetDirty(Selection.gameObjects[0]);
+        if (dirty)
+            EditorUtility.SetDirty(Selection.gameObjects[0]);
     }
 
     [MenuItem("GameObject/**取消绑定组件**", false, 0)]
     private static void RemoveAutoBind(MenuCommand menuCommand)
     {
+        var dirty = false;
         foreach (var go in Selection.gameObjects)
         {
-            if (go.TryGetComponent<AutoBindCollection>(out var comp))
+            if (go.name.StartsWith("@"))
             {
-                Object.DestroyImmediate(comp);
+                go.name = go.name.Substring(1, go.name.Length - 1);
+                dirty = true;
             }
         }
-        EditorUtility.SetDirty(Selection.gameObjects[0]);
+
+        if (dirty)
+            EditorUtility.SetDirty(Selection.gameObjects[0]);
     }
 }
 #endif

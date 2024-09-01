@@ -160,7 +160,7 @@ public class AutoBindComponentInspector : UnityEditor.Editor
 
     private SerializedProperty m_BindDatas;
 
-    private List<AutoBindCollection> m_Collection;
+    private List<GameObject> m_Collection = new List<GameObject>();
 
     private GUIStyle m_FoldoutBtnStyle;
 
@@ -186,7 +186,7 @@ public class AutoBindComponentInspector : UnityEditor.Editor
         m_Target = (AutoBindComponent)target;
         m_BindDatas = serializedObject.FindProperty("m_BindDatas");
 
-        m_Collection = m_Target.GetComponentsInChildren<AutoBindCollection>(true).ToList();
+        SetCollection();
 
         serializedObject.ApplyModifiedProperties();
     }
@@ -255,9 +255,9 @@ public class AutoBindComponentInspector : UnityEditor.Editor
             foreach (Transform child in transform)
             {
                 Iteration(child);
-                if (child.TryGetComponent<AutoBindCollection>(out var comp))
+                if (child.name.StartsWith("@"))
                 {
-                    m_Collection.Add(comp);
+                    m_Collection.Add(child.gameObject);
                 }
             }
         }
@@ -571,9 +571,6 @@ public class AutoBindComponent : MonoBehaviour
     [HideInInspector] public HashSet<Type> exclude = new HashSet<Type>()
     {
         typeof(AutoBindComponent),
-#if UNITY_EDITOR
-        typeof(AutoBindCollection),
-#endif
         typeof(CanvasRenderer),
     };
 #if UNITY_EDITOR
