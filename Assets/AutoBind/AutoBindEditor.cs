@@ -31,7 +31,7 @@ public class AutoBindEditor
             EditorUtility.SetDirty(Selection.gameObjects[0]);
     }
 
-    [MenuItem("GameObject/**取消绑定组件**", false, 0)]
+    [MenuItem("GameObject/**取消绑定组件**", false, 1)]
     private static void RemoveAutoBind(MenuCommand menuCommand)
     {
         var dirty = false;

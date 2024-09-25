@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028352, g: 0.22571376, b: 0.3069224, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -135,7 +135,6 @@ GameObject:
   - component: {fileID: 63940090}
   - component: {fileID: 63940091}
   - component: {fileID: 63940088}
-  - component: {fileID: 63940089}
   m_Layer: 0
   m_Name: Scroll View
   m_TagString: Untagged
@@ -173,18 +172,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &63940089
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 63940087}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 581c1da46962a824db12bddd30cbf000, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!222 &63940090
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -255,9 +242,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 216910129}
-  - component: {fileID: 216910128}
   - component: {fileID: 216910127}
-  - component: {fileID: 216910126}
+  - component: {fileID: 216910128}
+  - component: {fileID: 216910131}
+  - component: {fileID: 216910132}
+  - component: {fileID: 216910133}
   m_Layer: 0
   m_Name: TestAutoBind
   m_TagString: Untagged
@@ -265,44 +254,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &216910126
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 216910125}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4a51d641621ef04f888c58ee44fc9a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_BindDatas:
-  - Name: Image
-    VarName: Image_Img
-    BindComp: {fileID: 2023601946}
-  - Name: Image
-    VarName: Image_RTrans
-    BindComp: {fileID: 2023601943}
-  - Name: Text (TMP)
-    VarName: Text_TMP_TextMeshProUGUI
-    BindComp: {fileID: 1965182488}
-  - Name: Text (TMP)
-    VarName: Text_TMP_RTrans
-    BindComp: {fileID: 1965182487}
-  - Name: Text (TMP)
-    VarName: Text_TMP_Go
-    BindComp: {fileID: 1965182484}
-  - Name: Scroll View
-    VarName: Scroll_View_RTrans
-    BindComp: {fileID: 63940092}
-  - Name: Scroll View
-    VarName: Scroll_View_Img
-    BindComp: {fileID: 63940091}
-  - Name: Scroll View
-    VarName: Scroll_View_ScrollRect
-    BindComp: {fileID: 63940088}
-  GeneraterComponent: {fileID: 216910128}
 --- !u!223 &216910127
 Canvas:
   m_ObjectHideFlags: 0
@@ -359,6 +310,70 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &216910131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216910125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24f8a88dfe40b644583c5f9a8b729ddd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &216910132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216910125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4a51d641621ef04f888c58ee44fc9a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_BindDatas:
+  - Name: '@Image'
+    VarName: '@Image_Img'
+    BindComp: {fileID: 2023601946}
+  - Name: '@Image'
+    VarName: '@Image_RTrans'
+    BindComp: {fileID: 2023601943}
+  - Name: '@Image'
+    VarName: '@Image_Go'
+    BindComp: {fileID: 2023601942}
+  - Name: '@Text (TMP)'
+    VarName: '@Text_TMP_Go'
+    BindComp: {fileID: 1965182484}
+  - Name: '@Text (TMP)'
+    VarName: '@Text_TMP_RTrans'
+    BindComp: {fileID: 1965182487}
+  - Name: '@Text (TMP)'
+    VarName: '@Text_TMP_TextMeshProUGUI'
+    BindComp: {fileID: 1965182488}
+  GeneraterComponent: {fileID: 216910128}
+--- !u!114 &216910133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216910125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4a51d641621ef04f888c58ee44fc9a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_BindDatas:
+  - Name: '@Image'
+    VarName: '@Image_Img'
+    BindComp: {fileID: 2023601946}
+  - Name: '@Text (TMP)'
+    VarName: '@Text_TMP_TextMeshProUGUI'
+    BindComp: {fileID: 1965182488}
+  GeneraterComponent: {fileID: 216910131}
 --- !u!1 &352777536
 GameObject:
   m_ObjectHideFlags: 0
@@ -1020,26 +1035,13 @@ GameObject:
   - component: {fileID: 1965182487}
   - component: {fileID: 1965182486}
   - component: {fileID: 1965182488}
-  - component: {fileID: 1965182485}
   m_Layer: 0
-  m_Name: Text (TMP)
+  m_Name: '@Text (TMP)'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1965182485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1965182484}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 581c1da46962a824db12bddd30cbf000, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!222 &1965182486
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1371,9 +1373,8 @@ GameObject:
   - component: {fileID: 2023601943}
   - component: {fileID: 2023601945}
   - component: {fileID: 2023601946}
-  - component: {fileID: 2023601944}
   m_Layer: 0
-  m_Name: Image
+  m_Name: '@Image'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1399,18 +1400,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &2023601944
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2023601942}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 581c1da46962a824db12bddd30cbf000, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!222 &2023601945
 CanvasRenderer:
   m_ObjectHideFlags: 0

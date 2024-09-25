@@ -133,7 +133,26 @@ public class AutoBindComponentInspector : UnityEditor.Editor
 
             var compName = $"{nameof(AutoBindComponent)}";
             AppendLine($"private {compName} _{compName};");
-            AppendLine($"private {compName} m_{compName} => _{compName} ??= gameObject.GetComponent<{compName}>();");
+            // AppendLine($"private {compName} m_{compName} => _{compName} ??= gameObject.GetComponent<{compName}>();");
+            AppendLine(@$"{"\t"}private {compName} m_{compName}
+    {{
+	    get
+	    {{
+		    if (_{compName} == null)
+		    {{
+			    var comps = gameObject.GetComponents<{compName}>();
+			    foreach (var comp in comps)
+			    {{
+				    if (comp.GeneraterComponent.Equals(this))
+				    {{
+					    _{compName} = comp;
+					    break;
+				    }}
+			    }}
+		    }}
+		    return _{compName};
+	    }}
+    }}");
 
             foreach (var fieldInfo in mFieldInfos)
             {
@@ -265,21 +284,6 @@ public class AutoBindComponentInspector : UnityEditor.Editor
         Iteration(m_Target.transform);
     }
 
-    static string GetScriptPath(string scriptName)
-    {
-        var path = AssetDatabase.FindAssets(scriptName);
-        foreach (var s in path)
-        {
-            var scriptPath = AssetDatabase.GUIDToAssetPath(s.Replace((@"/" + scriptName + ".cs"), ""));
-            if (!Directory.Exists(scriptPath) && Path.GetFileNameWithoutExtension(scriptPath).Equals(scriptName))
-            {
-                return scriptPath;
-            }
-        }
-
-        return string.Empty;
-    }
-
     private void DrawButton()
     {
         // if (GUILayout.Button("清理"))
@@ -337,7 +341,7 @@ public class AutoBindComponentInspector : UnityEditor.Editor
             }
 
             var codeText = m_CodeGenerator.ToString();
-            var scriptPath = GetScriptPath(m_Target.GeneraterComponent.GetType().Name);
+            var scriptPath = AutoBindComponent.GetScriptPath(m_Target.GeneraterComponent.GetType().Name);
             var dir = scriptPath.Replace(Path.GetFileName(scriptPath), "");
             var savePath = $"{dir}/{Path.GetFileNameWithoutExtension(scriptPath)}.Auto.cs";
 
@@ -377,13 +381,14 @@ public class AutoBindComponentInspector : UnityEditor.Editor
             foldoutDict[node.GetHashCode()] = foldout;
             if (foldout)
             {
-                // var comps = node.GetComponents<Component>().ToList();
                 m_Comps.Clear();
                 m_Comps.Add(node.gameObject);
                 m_Comps.AddRange(node.GetComponents<Component>().ToList());
                 for (var i = 0; i < m_Comps.Count; i++)
                 {
                     var comp = m_Comps[i];
+                    if (comp == null)
+                        continue;
                     var type = comp.GetType();
                     if (m_Target.exclude.Contains(type))
                         continue;
@@ -573,14 +578,36 @@ public class AutoBindComponent : MonoBehaviour
         typeof(AutoBindComponent),
         typeof(CanvasRenderer),
     };
+
+    public static string GetScriptPath(string scriptName)
+    {
+        var path = AssetDatabase.FindAssets(scriptName);
+        foreach (var s in path)
+        {
+            var scriptPath = AssetDatabase.GUIDToAssetPath(s.Replace((@"/" + scriptName + ".cs"), ""));
+            if (!Directory.Exists(scriptPath) && Path.GetFileNameWithoutExtension(scriptPath).Equals(scriptName))
+            {
+                return scriptPath;
+            }
+        }
+
+        return string.Empty;
+    }
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
         if (!GeneraterComponent)
         {
             var monoBehaviours = transform.GetComponents<MonoBehaviour>();
-            if (monoBehaviours.Length > 0)
-                GeneraterComponent = monoBehaviours[0];
+            foreach (var behaviour in monoBehaviours)
+            {
+                if (GetScriptPath(behaviour.GetType().Name).StartsWith("Assets/"))
+                {
+                    GeneraterComponent = behaviour;
+                    break;
+                }
+            }
         }
     }
 #endif
