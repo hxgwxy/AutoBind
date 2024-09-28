@@ -458,6 +458,7 @@ public class AutoBindComponentInspector : UnityEditor.Editor
             }
 
             var varName2 = string.IsNullOrEmpty(typeMap) ? comp.name : $"{comp.name}_{typeMap}";
+            varName2 = varName2.Substring(1, varName2.Length - 1);
             var varName3 = string.IsNullOrEmpty(varName) ? varName2 : varName;
             varName3 = varName3.Replace(" ", "_").Replace("(", "").Replace(")", "");
             element.FindPropertyRelative("VarName").stringValue = varName3;
