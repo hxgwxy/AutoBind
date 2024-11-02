@@ -10,131 +10,128 @@ using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
-[CustomEditor(typeof(AutoBindComponent))]
-public class AutoBindComponentInspector : UnityEditor.Editor
+public class CodeGenerator
 {
-    private class CodeGenerator
+    class FieldInfo
     {
-        class FieldInfo
+        public string Flag;
+        public string Name;
+        public Type Type;
+    }
+
+    class GetterInfo
+    {
+        public string Flag;
+        public string Name;
+        public Type Type;
+        public int Index;
+    }
+
+    private StringBuilder mStringBuilder = new StringBuilder();
+    private List<FieldInfo> mFieldInfos = new List<FieldInfo>();
+    private List<GetterInfo> mGetterInfos = new List<GetterInfo>();
+    private string mNameSpace;
+    private string mClassName;
+    private int mTabCount;
+
+    public void Clear()
+    {
+        mStringBuilder.Clear();
+        mFieldInfos.Clear();
+        mGetterInfos.Clear();
+        mNameSpace = string.Empty;
+        mClassName = string.Empty;
+        mTabCount = 0;
+    }
+
+    public void SetClassName(string name)
+    {
+        mClassName = name;
+    }
+
+    public void SetNameSpace(string name)
+    {
+        mNameSpace = name;
+    }
+
+    public void AddField(string flag, Type type, string name)
+    {
+        mFieldInfos.Add(new FieldInfo()
         {
-            public string Flag;
-            public string Name;
-            public Type Type;
+            Flag = flag,
+            Type = type,
+            Name = name,
+        });
+    }
+
+    public void AddGetter(string flag, Type type, string name, int index)
+    {
+        mGetterInfos.Add(new GetterInfo()
+        {
+            Flag = flag,
+            Type = type,
+            Name = name,
+            Index = index,
+        });
+    }
+
+    private void AppendLine(string text)
+    {
+        if (text.Contains("}"))
+            mTabCount--;
+        for (var i = 0; i < mTabCount; i++)
+        {
+            mStringBuilder.Append("\t");
         }
 
-        class GetterInfo
-        {
-            public string Flag;
-            public string Name;
-            public Type Type;
-            public int Index;
-        }
+        mStringBuilder.AppendLine(text);
+        if (text.Contains("{"))
+            mTabCount++;
+    }
 
-        private StringBuilder mStringBuilder = new StringBuilder();
-        private List<FieldInfo> mFieldInfos = new List<FieldInfo>();
-        private List<GetterInfo> mGetterInfos = new List<GetterInfo>();
-        private string mNameSpace;
-        private string mClassName;
-        private int mTabCount;
+    public override string ToString()
+    {
+        mStringBuilder.Clear();
 
-        public void Clear()
+        var set = new HashSet<string>();
+        foreach (var fieldInfo in mFieldInfos)
         {
-            mStringBuilder.Clear();
-            mFieldInfos.Clear();
-            mGetterInfos.Clear();
-            mNameSpace = string.Empty;
-            mClassName = string.Empty;
-            mTabCount = 0;
-        }
-
-        public void SetClassName(string name)
-        {
-            mClassName = name;
-        }
-
-        public void SetNameSpace(string name)
-        {
-            mNameSpace = name;
-        }
-
-        public void AddField(string flag, Type type, string name)
-        {
-            mFieldInfos.Add(new FieldInfo()
+            var namespaceStr = fieldInfo.Type.Namespace;
+            if (!string.IsNullOrEmpty(namespaceStr) && !namespaceStr.Equals(mNameSpace))
             {
-                Flag = flag,
-                Type = type,
-                Name = name,
-            });
-        }
-
-        public void AddGetter(string flag, Type type, string name, int index)
-        {
-            mGetterInfos.Add(new GetterInfo()
-            {
-                Flag = flag,
-                Type = type,
-                Name = name,
-                Index = index,
-            });
-        }
-
-        private void AppendLine(string text)
-        {
-            if (text.Contains("}"))
-                mTabCount--;
-            for (var i = 0; i < mTabCount; i++)
-            {
-                mStringBuilder.Append("\t");
+                set.Add(namespaceStr);
             }
-
-            mStringBuilder.AppendLine(text);
-            if (text.Contains("{"))
-                mTabCount++;
         }
 
-        public override string ToString()
+        foreach (var getterInfo in mGetterInfos)
         {
-            mStringBuilder.Clear();
-
-            var set = new HashSet<string>();
-            foreach (var fieldInfo in mFieldInfos)
+            var namespaceStr = getterInfo.Type.Namespace;
+            if (!string.IsNullOrEmpty(namespaceStr) && !namespaceStr.Equals(mNameSpace))
             {
-                var namespaceStr = fieldInfo.Type.Namespace;
-                if (!string.IsNullOrEmpty(namespaceStr) && !namespaceStr.Equals(mNameSpace))
-                {
-                    set.Add(namespaceStr);
-                }
+                set.Add(namespaceStr);
             }
+        }
 
-            foreach (var getterInfo in mGetterInfos)
-            {
-                var namespaceStr = getterInfo.Type.Namespace;
-                if (!string.IsNullOrEmpty(namespaceStr) && !namespaceStr.Equals(mNameSpace))
-                {
-                    set.Add(namespaceStr);
-                }
-            }
+        foreach (var s in set)
+        {
+            AppendLine($"using {s};");
+        }
 
-            foreach (var s in set)
-            {
-                AppendLine($"using {s};");
-            }
+        AppendLine("");
 
-            AppendLine("");
-
-            if (!string.IsNullOrEmpty(mNameSpace))
-            {
-                AppendLine($"namespace {mNameSpace}");
-                AppendLine("{");
-            }
-
-            AppendLine($"public partial class {mClassName}");
+        if (!string.IsNullOrEmpty(mNameSpace))
+        {
+            AppendLine($"namespace {mNameSpace}");
             AppendLine("{");
+        }
 
-            var compName = $"{nameof(AutoBindComponent)}";
-            AppendLine($"private {compName} _{compName};");
-            // AppendLine($"private {compName} m_{compName} => _{compName} ??= gameObject.GetComponent<{compName}>();");
-            AppendLine(@$"{"\t"}private {compName} m_{compName}
+        AppendLine($"public partial class {mClassName}");
+        AppendLine("{");
+
+        var compName = $"{nameof(AutoBindComponent)}";
+        AppendLine($"private {compName} _{compName};");
+        // AppendLine($"private {compName} m_{compName} => _{compName} ??= gameObject.GetComponent<{compName}>();");
+        AppendLine(@$"{"\t"}private {compName} m_{compName}
     {{
 	    get
 	    {{
@@ -154,25 +151,35 @@ public class AutoBindComponentInspector : UnityEditor.Editor
 	    }}
     }}");
 
-            foreach (var fieldInfo in mFieldInfos)
-            {
-                AppendLine($"{fieldInfo.Flag} {fieldInfo.Type.Name} {fieldInfo.Name};");
-            }
-
-            foreach (var getterInfo in mGetterInfos)
-            {
-                AppendLine($"{getterInfo.Flag} {getterInfo.Type.Name} {getterInfo.Name} => ({getterInfo.Type.Name})m_{compName}.m_BindDatas[{getterInfo.Index}].BindComp;");
-            }
-
-            if (!string.IsNullOrEmpty(mNameSpace))
-            {
-                AppendLine("}");
-            }
-
-            AppendLine("}");
-
-            return mStringBuilder.ToString();
+        foreach (var fieldInfo in mFieldInfos)
+        {
+            AppendLine($"{fieldInfo.Flag} {fieldInfo.Type.Name} {fieldInfo.Name};");
         }
+
+        foreach (var getterInfo in mGetterInfos)
+        {
+            AppendLine($"{getterInfo.Flag} {getterInfo.Type.Name} {getterInfo.Name} => ({getterInfo.Type.Name})m_{compName}.m_BindDatas[{getterInfo.Index}].BindComp;");
+        }
+
+        if (!string.IsNullOrEmpty(mNameSpace))
+        {
+            AppendLine("}");
+        }
+
+        AppendLine("}");
+
+        return mStringBuilder.ToString();
+    }
+}
+
+
+[CustomEditor(typeof(AutoBindComponent))]
+public class AutoBindComponentInspector : UnityEditor.Editor
+{
+    class Item
+    {
+        public string Name;
+        public Object Value;
     }
 
     private AutoBindComponent m_Target;
@@ -183,8 +190,6 @@ public class AutoBindComponentInspector : UnityEditor.Editor
 
     private GUIStyle m_FoldoutBtnStyle;
 
-    private static CodeGenerator m_CodeGenerator = new CodeGenerator();
-
     private Dictionary<int, bool> foldoutDict = new Dictionary<int, bool>();
 
     private static Dictionary<string, string> TypeNameMap = new Dictionary<string, string>()
@@ -194,11 +199,14 @@ public class AutoBindComponentInspector : UnityEditor.Editor
         { nameof(RectTransform), "RTrans" },
         { nameof(Image), "Img" },
         { nameof(Button), "Btn" },
+        { nameof(Animation), "Anim" },
     };
 
     private List<Object> m_Comps = new List<Object>();
     private List<Transform> m_NodeList = new();
     private List<AutoBindComponent.BindData> m_TempList = new();
+
+    private List<Item> m_BindDatasList = new();
 
     private void OnEnable()
     {
@@ -263,6 +271,23 @@ public class AutoBindComponentInspector : UnityEditor.Editor
                 m_BindDatas.DeleteArrayElementAtIndex(i);
             }
         }
+
+        GenCache();
+    }
+
+    private void GenCache()
+    {
+        m_BindDatasList.Clear();
+        for (var i = 0; i < m_BindDatas.arraySize; i++)
+        {
+            var nameProperty = m_BindDatas.GetArrayElementAtIndex(i).FindPropertyRelative("Name");
+            var compProperty = m_BindDatas.GetArrayElementAtIndex(i).FindPropertyRelative("BindComp");
+            m_BindDatasList.Add(new Item()
+            {
+                Name = nameProperty.stringValue,
+                Value = compProperty.objectReferenceValue,
+            });
+        }
     }
 
     private void SetCollection()
@@ -286,17 +311,16 @@ public class AutoBindComponentInspector : UnityEditor.Editor
 
     private void DrawButton()
     {
-        // if (GUILayout.Button("清理"))
-        // {
-        //     serializedObject.Update();
-        //     m_BindDatas.ClearArray();
-        //     serializedObject.ApplyModifiedProperties();
-        //     GenCode();
-        // }
+        if (GUILayout.Button("清理"))
+        {
+            serializedObject.Update();
+            m_BindDatas.ClearArray();
+            serializedObject.ApplyModifiedProperties();
+        }
 
         if (GUILayout.Button("生成代码"))
         {
-            GenCode();
+            m_Target.GenCode();
         }
 
         if (GUILayout.Button("展开全部"))
@@ -318,46 +342,6 @@ public class AutoBindComponentInspector : UnityEditor.Editor
         }
     }
 
-    private void GenCode()
-    {
-        if (m_Target.GeneraterComponent)
-        {
-            var type = m_Target.GeneraterComponent.GetType();
-            m_CodeGenerator.Clear();
-            m_CodeGenerator.SetNameSpace(type.Namespace);
-            m_CodeGenerator.SetClassName(type.Name);
-
-            // foreach (var bindData in m_Target.m_BindDatas)
-            // {
-            //     var compType = bindData.BindComp.GetType();
-            //     m_CodeGenerator.AddField("private", compType, $"{bindData.Name}_{compType.Name}");
-            // }
-
-            for (var i = 0; i < m_Target.m_BindDatas.Count; i++)
-            {
-                var bindData = m_Target.m_BindDatas[i];
-                var compType = bindData.BindComp.GetType();
-                m_CodeGenerator.AddGetter("private", compType, bindData.VarName, i);
-            }
-
-            var codeText = m_CodeGenerator.ToString();
-            var scriptPath = AutoBindComponent.GetScriptPath(m_Target.GeneraterComponent.GetType().Name);
-            var dir = scriptPath.Replace(Path.GetFileName(scriptPath), "");
-            var savePath = $"{dir}/{Path.GetFileNameWithoutExtension(scriptPath)}.Auto.cs";
-
-            var mainScriptText = File.ReadAllText(scriptPath);
-            var match1 = Regex.Match(mainScriptText, $@"class[^.]+{type.Name}[^.]*:");
-            var match2 = Regex.Match(mainScriptText, $@"partial[^.]+class[^.]+{type.Name}[^.]*:");
-            if (match1.Success && !match2.Success)
-            {
-                mainScriptText = mainScriptText.Replace(match1.Value, $"partial class {type.Name} :");
-                File.WriteAllText(scriptPath, mainScriptText);
-            }
-
-            File.WriteAllText(savePath, codeText);
-            AssetDatabase.Refresh();
-        }
-    }
 
     private void DrawRow()
     {
@@ -390,18 +374,12 @@ public class AutoBindComponentInspector : UnityEditor.Editor
                     if (comp == null)
                         continue;
                     var type = comp.GetType();
-                    if (m_Target.exclude.Contains(type))
+                    if (m_Target.ExcludeComponents.Contains(type))
                         continue;
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.Space(20);
 
                     var exists = IsExists(comp);
-                    // if (GUILayout.Button($"{type.Name}", m_FoldoutBtnStyle, GUILayout.Width(180)))
-                    // {
-                    //     exists = !exists;
-                    //     if (exists) AddBindData(comp.name, comp);
-                    //     else RemoveBindData(comp.name, comp);
-                    // }
 
                     var value = EditorGUILayout.ToggleLeft(type.Name, exists, GUILayout.Width(180));
                     if (value != exists)
@@ -409,6 +387,7 @@ public class AutoBindComponentInspector : UnityEditor.Editor
                         exists = !exists;
                         if (exists) AddBindData(comp, "");
                         else RemoveBindData(comp);
+                        GenCache();
                     }
 
                     var item = m_Target.m_BindDatas.Find(v => v.BindComp.Equals(comp));
@@ -457,7 +436,7 @@ public class AutoBindComponentInspector : UnityEditor.Editor
                 }
             }
 
-            var varName2 = string.IsNullOrEmpty(typeMap) ? comp.name : $"{comp.name}_{typeMap}";
+            var varName2 = string.IsNullOrEmpty(typeMap) ? comp.name : $"{comp.name}{typeMap}";
             varName2 = varName2.Substring(1, varName2.Length - 1);
             var varName3 = string.IsNullOrEmpty(varName) ? varName2 : varName;
             varName3 = varName3.Replace(" ", "_").Replace("(", "").Replace(")", "");
@@ -484,6 +463,7 @@ public class AutoBindComponentInspector : UnityEditor.Editor
 
         m_Target.m_BindDatas.Clear();
         m_BindDatas.ClearArray();
+        GenCache();
 
         for (var i = 0; i < m_NodeList.Count; i++)
         {
@@ -497,6 +477,8 @@ public class AutoBindComponentInspector : UnityEditor.Editor
                 }
             }
         }
+
+        GenCache();
     }
 
     private void RemoveBindData(Object comp)
@@ -511,6 +493,8 @@ public class AutoBindComponentInspector : UnityEditor.Editor
                 break;
             }
         }
+
+        GenCache();
     }
 
     private void SetBindDataVarName(string name, Object comp, string propertyValue)
@@ -526,6 +510,8 @@ public class AutoBindComponentInspector : UnityEditor.Editor
                 break;
             }
         }
+
+        GenCache();
     }
 
     private bool IsExists(Object comp)
@@ -535,11 +521,11 @@ public class AutoBindComponentInspector : UnityEditor.Editor
 
     private SerializedProperty FindSerializedData(Object comp)
     {
-        for (var i = 0; i < m_BindDatas.arraySize; i++)
+        if (m_BindDatasList.Count == 0)
+            GenCache();
+        for (var i = 0; i < m_BindDatasList.Count; i++)
         {
-            var nameProperty = m_BindDatas.GetArrayElementAtIndex(i).FindPropertyRelative("Name");
-            var compProperty = m_BindDatas.GetArrayElementAtIndex(i).FindPropertyRelative("BindComp");
-            if (compProperty.objectReferenceValue.Equals(comp))
+            if (m_BindDatasList[i].Value.Equals(comp))
             {
                 return m_BindDatas.GetArrayElementAtIndex(i);
             }
@@ -574,13 +560,17 @@ public class AutoBindComponent : MonoBehaviour
 
     [SerializeField] public Component GeneraterComponent;
 
-    [HideInInspector] public HashSet<Type> exclude = new HashSet<Type>()
+    [HideInInspector] public HashSet<Type> ExcludeComponents = new HashSet<Type>()
     {
         typeof(AutoBindComponent),
         typeof(CanvasRenderer),
     };
 
-    public static string GetScriptPath(string scriptName)
+    private static CodeGenerator m_CodeGenerator = new CodeGenerator();
+
+#if UNITY_EDITOR
+
+    private static string GetScriptPath(string scriptName)
     {
         var path = AssetDatabase.FindAssets(scriptName);
         foreach (var s in path)
@@ -595,7 +585,6 @@ public class AutoBindComponent : MonoBehaviour
         return string.Empty;
     }
 
-#if UNITY_EDITOR
     private void OnValidate()
     {
         if (!GeneraterComponent)
@@ -609,6 +598,41 @@ public class AutoBindComponent : MonoBehaviour
                     break;
                 }
             }
+        }
+    }
+
+    public void GenCode()
+    {
+        if (GeneraterComponent)
+        {
+            var type = GeneraterComponent.GetType();
+            m_CodeGenerator.Clear();
+            m_CodeGenerator.SetNameSpace(type.Namespace);
+            m_CodeGenerator.SetClassName(type.Name);
+
+            for (var i = 0; i < m_BindDatas.Count; i++)
+            {
+                var bindData = m_BindDatas[i];
+                var compType = bindData.BindComp.GetType();
+                m_CodeGenerator.AddGetter("private", compType, bindData.VarName, i);
+            }
+
+            var codeText = m_CodeGenerator.ToString();
+            var scriptPath = GetScriptPath(GeneraterComponent.GetType().Name);
+            var dir = scriptPath.Replace(Path.GetFileName(scriptPath), "");
+            var savePath = $"{dir}/{Path.GetFileNameWithoutExtension(scriptPath)}.Auto.cs";
+
+            var mainScriptText = File.ReadAllText(scriptPath);
+            var match1 = Regex.Match(mainScriptText, $@"class[^.]+{type.Name}[^.]*:");
+            var match2 = Regex.Match(mainScriptText, $@"partial[^.]+class[^.]+{type.Name}[^.]*:");
+            if (match1.Success && !match2.Success)
+            {
+                mainScriptText = mainScriptText.Replace(match1.Value, $"partial class {type.Name} :");
+                File.WriteAllText(scriptPath, mainScriptText);
+            }
+
+            File.WriteAllText(savePath, codeText);
+            AssetDatabase.Refresh();
         }
     }
 #endif
